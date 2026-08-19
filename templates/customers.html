@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Customers{% endblock %}
+{% block page_title %}Customers{% endblock %}
+{% block page_sub %}Guest directory & profiles{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4><i class="bi bi-people-fill text-navy"></i> Customers</h4>
+  <a href="{{ url_for('customer_add') }}" class="btn btn-navy"><i class="bi bi-person-plus me-1"></i>Add Customer</a>
+</div>
+
+<!-- Search -->
+<div class="content-card mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2 align-items-end" method="GET">
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" name="search" class="form-control" placeholder="Search by name, phone or email..." value="{{ search }}"/>
+        </div>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-sm btn-info text-white">Search</button>
+      </div>
+      {% if search %}
+      <div class="col-auto">
+        <a href="{{ url_for('customers') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="content-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover datatable mb-0">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>ID Type</th><th>ID Number</th><th>Nationality</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for c in customers %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ c.name }}</strong></td>
+            <td class="text-muted small">{{ c.email }}</td>
+            <td>{{ c.phone }}</td>
+            <td><small>{{ c.id_type }}</small></td>
+            <td><small>{{ c.id_number }}</small></td>
+            <td>{{ c.nationality }}</td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('customer_edit', cid=c.id) }}" class="btn btn-outline-primary py-1" title="Edit"><i class="bi bi-pencil"></i></a>
+                <a href="{{ url_for('customer_history', cid=c.id) }}" class="btn btn-outline-info py-1" title="History"><i class="bi bi-clock-history"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8">
+            <div class="empty-state">
+              <div class="es-icon"><i class="bi bi-people"></i></div>
+              <p>No customers found{% if search %} for “{{ search }}”{% endif %}.</p>
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

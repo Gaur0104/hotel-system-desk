@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Staff Management{% endblock %}
+{% block page_title %}Staff Management{% endblock %}
+{% block page_sub %}Accounts & access roles{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4><i class="bi bi-person-badge-fill text-navy"></i> Staff Directory</h4>
+  <a href="{{ url_for('user_add') }}" class="btn btn-navy"><i class="bi bi-person-plus me-2"></i>Add Staff</a>
+</div>
+
+<div class="content-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover datatable mb-0">
+         <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Last Login</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td class="fw-semibold">{{ u.full_name }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email or '-' }}</td>
+            <td>
+                {% if u.role == 'admin' %}
+                    <span class="badge bg-danger">Admin</span>
+                {% else %}
+                    <span class="badge bg-success">Staff</span>
+                {% endif %}
+            </td>
+            <td class="text-muted small">{{ u.last_login or 'Never' }}</td>
+            <td class="text-end">
+              {% if u.role != 'admin' %}
+              <form method="POST" action="{{ url_for('user_delete', uid=u.id) }}" class="d-inline"
+                    onsubmit="return confirm('Delete staff account {{ u.username }}?')">
+                <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+              </form>
+              {% else %}
+              <span class="text-muted" title="Admin account is protected"><i class="bi bi-lock-fill"></i></span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7">
+            <div class="empty-state">
+              <div class="es-icon"><i class="bi bi-person-badge"></i></div>
+              <p>No staff accounts yet.</p>
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

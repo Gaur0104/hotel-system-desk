@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Grand Azure{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Operational overview{% endblock %}
+{% block content %}
+
+<!-- Greeting hero -->
+<div class="hero-greet">
+  <div>
+    <h3>Welcome back, {{ current_user.full_name.split(' ')[0] }}</h3>
+    <div class="hg-sub">{{ now.strftime('%A, %d %B %Y') }} · Here is how the property is performing today.</div>
+  </div>
+  <div class="hg-actions">
+    <a href="{{ url_for('booking_new') }}" class="btn btn-navy btn-sm"><i class="bi bi-plus-circle me-2"></i>New Booking</a>
+    <a href="{{ url_for('billing') }}" class="btn btn-gold btn-sm"><i class="bi bi-credit-card me-2"></i>Billing</a>
+  </div>
+</div>
+
+<!-- KPI tiles -->
+<div class="row g-3">
+  {% set cards = [
+    ('Total Rooms',     stats.total_rooms,                          'bi-door-closed-fill',   'var(--accent)'),
+    ('Available',       stats.available_rooms,                       'bi-check-circle-fill',  '#10B981'),
+    ('Occupied',        stats.booked_rooms,                          'bi-person-fill',        '#EF4444'),
+    ('Maintenance',     stats.maintenance_rooms,                     'bi-tools',              '#F59E0B'),
+    ('Today Check-in',  stats.today_checkins,                        'bi-box-arrow-in-right', '#0EA5E9'),
+    ('Today Check-out', stats.today_checkouts,                       'bi-box-arrow-right',    '#64748B'),
+    ('Today Revenue',   '₹' ~ (stats.today_revenue|int|string),      'bi-currency-rupee',     '#10B981'),
+    ('Monthly Revenue', '₹' ~ (stats.monthly_revenue|int|string),    'bi-graph-up-arrow',     'var(--accent)'),
+  ] %}
+  {% for label, value, icon, hex in cards %}
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex h-100">
+      <div class="card-accent" style="background:{{ hex }}"></div>
+      <div class="card-body">
+        <div class="stat-label"><i class="bi {{ icon }} me-1"></i>{{ label }}</div>
+        <div class="stat-value" style="color:{{ hex }}">{{ value }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-3">
+  <!-- Occupancy -->
+  <div class="col-md-4">
+    <div class="content-card h-100">
+      <div class="card-header"><i class="bi bi-pie-chart-fill me-2"></i>Occupancy Rate</div>
+      <div class="card-body text-center py-4">
+        <div style="font-family:'Sora',sans-serif;font-size:56px;font-weight:800;letter-spacing:-.04em;color:var(--accent)">{{ stats.occ_rate }}%</div>
+        <div class="occ-bar my-3">
+          <div class="occ-fill" style="width:{{ stats.occ_rate }}%"></div>
+        </div>
+        <div class="text-muted small">{{ stats.booked_rooms }} of {{ stats.total_rooms }} rooms occupied</div>
+        <div class="mt-3 d-flex justify-content-center gap-2 flex-wrap">
+          <span class="badge bg-success">{{ stats.available_rooms }} Available</span>
+          <span class="badge bg-danger">{{ stats.booked_rooms }} Booked</span>
+          <span class="badge bg-warning text-dark">{{ stats.maintenance_rooms }} Maintenance</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Summary -->
+  <div class="col-md-4">
+    <div class="content-card h-100">
+      <div class="card-header"><i class="bi bi-list-check me-2"></i>Today's Summary</div>
+      <div class="card-body">
+        {% set summary = [
+          ('Active Bookings',     stats.active_bookings,      'primary'),
+          ('Expected Check-ins',  stats.today_checkins,       'info'),
+          ('Expected Check-outs', stats.today_checkouts,      'warning'),
+          ('Total Customers',     stats.total_customers,      'secondary'),
+        ] %}
+        {% for label, val, color in summary %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="text-muted small">{{ label }}</span>
+          <span class="badge bg-{{ color }}">{{ val }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="col-md-4">
+    <div class="content-card h-100">
+      <div class="card-header"><i class="bi bi-lightning-charge-fill me-2"></i>Quick Actions</div>
+      <div class="card-body d-flex flex-column gap-2">
+        <a href="{{ url_for('booking_new') }}"  class="btn btn-navy btn-sm"><i class="bi bi-plus-circle me-2"></i>New Booking</a>
+        <a href="{{ url_for('customer_add') }}" class="btn btn-navy btn-sm"><i class="bi bi-person-plus me-2"></i>Add Customer</a>
+        <a href="{{ url_for('rooms') }}"        class="btn btn-outline-primary btn-sm"><i class="bi bi-door-closed me-2"></i>Manage Rooms</a>
+        <a href="{{ url_for('billing') }}"      class="btn btn-outline-success btn-sm"><i class="bi bi-credit-card me-2"></i>Billing</a>
+        <a href="{{ url_for('services') }}"     class="btn btn-outline-warning btn-sm"><i class="bi bi-cup-hot me-2"></i>Room Service</a>
+        <a href="{{ url_for('analytics') }}"    class="btn btn-outline-info btn-sm"><i class="bi bi-graph-up me-2"></i>Analytics</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Bookings -->
+<div class="content-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-clock-history me-2"></i>Recent Bookings</span>
+    <a href="{{ url_for('bookings') }}" class="btn btn-sm btn-navy">View All</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr><th>Ref</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Total</th><th>Payment</th></tr>
+        </thead>
+        <tbody>
+          {% for b in stats.recent_bookings %}
+          <tr>
+            <td><span class="text-navy fw-semibold">{{ b.booking_ref }}</span></td>
+            <td>{{ b.customer_name }}</td>
+            <td>{{ b.room_number }}</td>
+            <td>{{ b.check_in_date }}</td>
+            <td>{{ b.check_out_date }}</td>
+            <td>{{ b.status | status_badge | safe }}</td>
+            <td>{{ b.total_amount | inr }}</td>
+            <td>{{ b.payment_status | status_badge | safe }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No bookings yet. <a href="{{ url_for('booking_new') }}">Create one →</a></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

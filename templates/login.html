@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Login — Grand Azure Hotel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --accent:#3B5BDB; --accent-bright:#5C7CFA;
+      --accent-grad:linear-gradient(135deg,#4263EB 0%,#5C7CFA 100%);
+      --surface:#fff; --border:#E7E9EE; --text-main:#0B1220; --text-subtle:#667085;
+      --ease:cubic-bezier(.22,1,.36,1);
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0; min-height:100vh; display:flex;
+      font-family:'Inter',system-ui,-apple-system,sans-serif;
+      color:var(--text-main); -webkit-font-smoothing:antialiased; overflow:hidden;
+    }
+
+    /* ── Left: brand stage ── */
+    .stage{
+      flex:1; position:relative;
+      background:#0B1020;
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:56px 60px; overflow:hidden;
+    }
+    .stage::before{
+      content:""; position:absolute; inset:0;
+      background:
+        radial-gradient(680px 520px at 20% 12%, rgba(92,124,250,.42), transparent 60%),
+        radial-gradient(620px 560px at 88% 92%, rgba(66,99,235,.34), transparent 62%);
+    }
+    .stage::after{
+      content:""; position:absolute; inset:-2px;
+      background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+      background-size:54px 54px;
+      mask-image:radial-gradient(circle at 50% 40%,#000 30%,transparent 78%);
+    }
+    .stage > *{position:relative; z-index:1;}
+    .stage-brand{display:flex; align-items:center; gap:14px;}
+    .stage-mark{
+      width:46px; height:46px; border-radius:13px;
+      background:var(--accent-grad); color:#fff;
+      display:flex; align-items:center; justify-content:center; font-size:22px;
+      box-shadow:0 12px 28px -8px rgba(92,124,250,.7);
+    }
+    .stage-brand h1{font-family:'Sora',sans-serif; font-size:20px; font-weight:800; color:#fff; margin:0; letter-spacing:-.02em;}
+    .stage-brand p{font-size:11px; color:#7E8AA8; margin:2px 0 0; text-transform:uppercase; letter-spacing:2px; font-weight:600;}
+
+    .stage-hero h2{
+      font-family:'Sora',sans-serif; font-weight:800; color:#fff;
+      font-size:clamp(2.2rem,3.4vw,3.4rem); line-height:1.07;
+      letter-spacing:-.035em; margin:0 0 18px;
+    }
+    .stage-hero h2 .accent{
+      background:linear-gradient(120deg,#8DA2FF,#5C7CFA);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .stage-hero p{color:#9AA5C0; font-size:15px; max-width:420px; line-height:1.65; margin:0;}
+
+    .feature-list{list-style:none; padding:0; margin:30px 0 0; display:flex; flex-direction:column; gap:13px;}
+    .feature-list li{color:#C2CBE3; font-size:14px; display:flex; align-items:center; gap:12px;}
+    .feature-list i{
+      color:var(--accent-bright); font-size:13px;
+      background:rgba(92,124,250,.16); width:26px; height:26px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .stage-foot{font-size:12px; color:#5E6886;}
+
+    /* ── Right: auth panel ── */
+    .panel{
+      width:min(50%,560px); background:var(--surface);
+      display:flex; align-items:center; justify-content:center;
+      padding:48px; position:relative;
+    }
+    .auth{width:100%; max-width:360px;}
+    .auth-title{font-family:'Sora',sans-serif; font-size:26px; font-weight:800; letter-spacing:-.03em; margin:0 0 6px;}
+    .auth-sub{color:var(--text-subtle); font-size:14px; margin:0 0 30px;}
+
+    .form-label{font-weight:600; font-size:13px; margin-bottom:7px; color:var(--text-main);}
+    .input-group-text{background:#FAFBFC; border:1px solid var(--border); border-right:none; color:var(--text-subtle); border-radius:11px 0 0 11px;}
+    .form-control{
+      border:1px solid var(--border); padding:11px 14px; font-size:14px;
+      border-radius:11px; transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+    }
+    .input-group .form-control{border-left:none; border-radius:0;}
+    .input-group .form-control:not(:last-child){border-radius:0;}
+    .input-group .btn{border:1px solid var(--border); border-left:none; border-radius:0 11px 11px 0; color:var(--text-subtle);}
+    .input-group:focus-within .input-group-text,
+    .input-group:focus-within .form-control,
+    .input-group:focus-within .btn{border-color:var(--accent);}
+    .input-group:focus-within{box-shadow:0 0 0 4px rgba(59,91,219,.10); border-radius:11px;}
+
+    .btn-login{
+      background:var(--accent-grad); color:#fff; border:none; width:100%;
+      padding:13px; border-radius:11px; font-weight:700; font-size:15px;
+      box-shadow:0 12px 26px -10px rgba(66,99,235,.7);
+      transition:transform .2s var(--ease),box-shadow .2s var(--ease),filter .2s var(--ease);
+    }
+    .btn-login:hover{color:#fff; transform:translateY(-2px); filter:brightness(1.06); box-shadow:0 18px 32px -10px rgba(66,99,235,.8);}
+    .btn-login:active{transform:translateY(0);}
+
+    .login-theme-toggle{
+      position:fixed; top:22px; right:22px;
+      background:rgba(255,255,255,.85); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+      border:1px solid var(--border); border-radius:12px;
+      width:42px; height:42px; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; color:var(--text-subtle); font-size:17px; transition:all .2s var(--ease); z-index:10;
+    }
+    .login-theme-toggle:hover{color:var(--accent); border-color:var(--accent); transform:rotate(-12deg);}
+
+    /* Entrance */
+    @media (prefers-reduced-motion:no-preference){
+      @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes fade{from{opacity:0}to{opacity:1}}
+      .stage{animation:fade .7s var(--ease) both;}
+      .reveal{animation:rise .65s var(--ease) both;}
+      .d1{animation-delay:.08s} .d2{animation-delay:.16s} .d3{animation-delay:.24s}
+      .d4{animation-delay:.32s} .d5{animation-delay:.40s} .d6{animation-delay:.48s}
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] body{background:#090B10;}
+    [data-theme="dark"] .panel{background:#14171F;}
+    [data-theme="dark"] .auth-title{color:#E7EAF0;}
+    [data-theme="dark"] .auth-sub{color:#8A93A3;}
+    [data-theme="dark"] .form-label{color:#E7EAF0;}
+    [data-theme="dark"] .form-control{background:#0E1117; border-color:#242935; color:#E7EAF0;}
+    [data-theme="dark"] .input-group-text{background:#0E1117; border-color:#242935; color:#8A93A3;}
+    [data-theme="dark"] .input-group .btn{background:#0E1117; border-color:#242935; color:#8A93A3;}
+    [data-theme="dark"] .login-theme-toggle{background:rgba(20,23,31,.85); border-color:#242935; color:#8A93A3;}
+    [data-theme="dark"] .alert-danger{background:rgba(239,68,68,.14); color:#FCA5A5; border:none;}
+
+    @media (max-width:920px){
+      .stage{display:none;}
+      .panel{width:100%;}
+    }
+  </style>
+</head>
+<body>
+<script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+
+<button class="login-theme-toggle" id="loginThemeToggle" title="Toggle dark mode">
+  <i class="bi bi-moon-fill"></i>
+</button>
+
+<!-- ── Brand stage ── -->
+<section class="stage">
+  <div class="stage-brand reveal d1">
+    <div class="stage-mark">✦</div>
+    <div>
+      <h1>Grand Azure</h1>
+      <p>Hotel Management</p>
+    </div>
+  </div>
+
+  <div class="stage-hero">
+    <h2 class="reveal d2">Run the front desk<br/><span class="accent">with quiet precision.</span></h2>
+    <p class="reveal d3">Rooms, reservations and billing — one calm, fast workspace for your team.</p>
+    <ul class="feature-list">
+      <li class="reveal d4"><i class="bi bi-check-lg"></i>Room &amp; booking management</li>
+      <li class="reveal d4"><i class="bi bi-check-lg"></i>Billing &amp; instant PDF invoices</li>
+      <li class="reveal d5"><i class="bi bi-check-lg"></i>Live analytics &amp; revenue reports</li>
+      <li class="reveal d5"><i class="bi bi-check-lg"></i>Room service tracking</li>
+    </ul>
+  </div>
+
+  <div class="stage-foot reveal d6">© 2026 Grand Azure · Marina Drive, Mumbai</div>
+</section>
+
+<!-- ── Auth panel ── -->
+<section class="panel">
+  <div class="auth">
+    <h2 class="auth-title reveal d2">Welcome back</h2>
+    <p class="auth-sub reveal d3">Sign in to continue to your dashboard.</p>
+
+    {% if error %}
+    <div class="alert alert-danger py-2 px-3 small reveal d3"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <div class="mb-3 reveal d4">
+        <label class="form-label">Username</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input type="text" name="username" class="form-control" placeholder="Enter username" required autofocus/>
+        </div>
+      </div>
+      <div class="mb-4 reveal d5">
+        <label class="form-label">Password</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" name="password" id="pwdField" class="form-control" placeholder="Enter password" required/>
+          <button type="button" class="btn" onclick="togglePwd()"><i class="bi bi-eye" id="eyeIcon"></i></button>
+        </div>
+      </div>
+      <button type="submit" class="btn-login btn reveal d6">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+      </button>
+    </form>
+  </div>
+</section>
+
+<script>
+function togglePwd(){
+  const f=document.getElementById('pwdField'),i=document.getElementById('eyeIcon');
+  f.type=f.type==='password'?'text':'password';
+  i.className=f.type==='password'?'bi bi-eye':'bi bi-eye-slash';
+}
+(function(){
+  const btn=document.getElementById('loginThemeToggle');
+  const icon=btn.querySelector('i');
+  const saved=localStorage.getItem('theme')||'light';
+  icon.className=saved==='dark'?'bi bi-sun-fill':'bi bi-moon-fill';
+  btn.addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme');
+    const next=cur==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    localStorage.setItem('theme',next);
+    icon.className=next==='dark'?'bi bi-sun-fill':'bi bi-moon-fill';
+  });
+})();
+</script>
+</body>
+</html>

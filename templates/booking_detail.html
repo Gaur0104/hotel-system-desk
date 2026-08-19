@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Booking {{ booking.booking_ref }}{% endblock %}
+{% block page_title %}Booking Details{% endblock %}
+{% block page_sub %}{{ booking.booking_ref }}{% endblock %}
+{% block content %}
+{% set b = booking %}
+<div class="row g-3">
+  <!-- Left: Details -->
+  <div class="col-md-7">
+    <div class="content-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-calendar-check-fill me-2"></i>{{ b.booking_ref }}</span>
+        {{ b.status | status_badge | safe }}
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="text-navy fw-bold mb-2"><i class="bi bi-person-fill me-1"></i>Guest</h6>
+            <p class="mb-1 fw-semibold">{{ b.customer_name }}</p>
+            <p class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i>{{ b.phone }}</p>
+            <p class="text-muted small mb-0"><i class="bi bi-envelope me-1"></i>{{ b.email }}</p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-navy fw-bold mb-2"><i class="bi bi-door-closed-fill me-1"></i>Room</h6>
+            <p class="mb-1 fw-semibold">Room {{ b.room_number }} ({{ b.room_type }})</p>
+            <p class="text-muted small mb-1">Rate: {{ b.price_per_night | inr }} / night</p>
+            <p class="text-muted small mb-0">{{ b.amenities }}</p>
+          </div>
+          <div class="col-12"><hr class="my-1"/></div>
+          <div class="col-md-4">
+            <small class="text-muted">Check-in</small>
+            <div class="fw-semibold">{{ b.check_in_date }}</div>
+          </div>
+          <div class="col-md-4">
+            <small class="text-muted">Check-out</small>
+            <div class="fw-semibold">{{ b.check_out_date }}</div>
+          </div>
+          <div class="col-md-4">
+            <small class="text-muted">Duration</small>
+            <div class="fw-semibold">{{ b.total_nights }} night{{ 's' if b.total_nights > 1 }}</div>
+          </div>
+        </div>
+
+        {% if b.special_requests %}
+        <div class="mt-3 p-2 bg-light rounded">
+          <small class="text-muted"><i class="bi bi-chat-left-text me-1"></i>Special Requests:</small><br/>
+          {{ b.special_requests }}
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 mt-4 flex-wrap">
+          {% if b.status == 'Confirmed' %}
+          <form method="POST" action="{{ url_for('booking_checkin', bid=b.id) }}">
+            <button class="btn btn-success btn-sm"><i class="bi bi-box-arrow-in-right me-1"></i>Check In</button>
+          </form>
+          {% endif %}
+          {% if b.status == 'Checked In' %}
+          <form method="POST" action="{{ url_for('booking_checkout', bid=b.id) }}">
+            <button class="btn btn-warning btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Check Out</button>
+          </form>
+          {% endif %}
+          {% if b.status not in ['Cancelled','Checked Out'] %}
+          <a href="{{ url_for('booking_edit', bid=b.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+          <form method="POST" action="{{ url_for('booking_cancel', bid=b.id) }}" class="confirm-form" data-msg="Cancel this booking?">
+            <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg me-1"></i>Cancel</button>
+          </form>
+          {% endif %}
+          <a href="{{ url_for('billing_detail', bid=b.id) }}" class="btn btn-outline-success btn-sm"><i class="bi bi-credit-card me-1"></i>Billing</a>
+          <a href="{{ url_for('billing_pdf', bid=b.id) }}" class="btn btn-navy btn-sm"><i class="bi bi-file-pdf me-1"></i>Download PDF</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services -->
+    {% if services %}
+    <div class="content-card mt-3">
+      <div class="card-header"><i class="bi bi-cup-hot-fill me-2"></i>Services Added</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>#</th><th>Service</th><th>Description</th><th>Date</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead>
+          <tbody>
+            {% for s in services %}
+            <tr>
+              <td>{{ loop.index }}</td><td>{{ s.service_type }}</td><td>{{ s.description }}</td>
+              <td>{{ s.date }}</td><td>{{ s.quantity }}</td>
+              <td>{{ s.unit_price | inr }}</td><td class="fw-semibold">{{ s.amount | inr }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: Invoice Summary -->
+  <div class="col-md-5">
+    <div class="content-card">
+      <div class="invoice-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="small opacity-75">Invoice</div>
+            <div class="fs-5 fw-bold">{{ b.booking_ref }}</div>
+          </div>
+          <div class="text-end">
+            <div class="small opacity-75">Status</div>
+            {{ b.payment_status | status_badge | safe }}
+          </div>
+        </div>
+      </div>
+      <div class="invoice-gold"></div>
+      <div class="invoice-body">
+        <div class="invoice-row"><span class="text-muted">Room Charges</span><span>{{ b.room_charges | inr }}</span></div>
+        {% if b.extra_charges %}
+        <div class="invoice-row"><span class="text-muted">Extra Services</span><span>{{ b.extra_charges | inr }}</span></div>
+        {% endif %}
+        {% if b.discount_amount %}
+        <div class="invoice-row"><span class="text-muted">Discount {{ '(' ~ b.coupon_code ~ ')' if b.coupon_code }}</span><span class="text-success">-{{ b.discount_amount | inr }}</span></div>
+        {% endif %}
+        <div class="invoice-row"><span class="text-muted">GST (12%)</span><span>{{ b.tax_amount | inr }}</span></div>
+        <div class="invoice-divider"></div>
+        <div class="invoice-row"><span class="invoice-total">TOTAL</span><span class="invoice-total">{{ b.total_amount | inr }}</span></div>
+        <div class="invoice-row"><span class="text-muted">Paid</span><span class="text-success fw-bold">{{ b.paid_amount | inr }}</span></div>
+        {% set balance = b.total_amount - b.paid_amount %}
+        <div class="invoice-row">
+          <span class="text-muted">Balance Due</span>
+          <span class="fw-bold {% if balance > 0 %}text-danger{% else %}text-success{% endif %}">{{ balance | inr }}</span>
+        </div>
+        <div class="invoice-row"><span class="text-muted">Method</span><span>{{ b.payment_method }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

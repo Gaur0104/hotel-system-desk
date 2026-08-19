@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Rooms{% endblock %}
+{% block page_title %}Room Management{% endblock %}
+{% block page_sub %}Inventory, pricing & status{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4><i class="bi bi-door-closed-fill text-navy"></i> Rooms</h4>
+  {% if current_user.role == 'admin' %}
+  <a href="{{ url_for('room_add') }}" class="btn btn-navy"><i class="bi bi-plus-lg me-1"></i>Add Room</a>
+  {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="content-card mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2 align-items-end" method="GET">
+      <div class="col-auto">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for s in ['All','Available','Booked','Maintenance'] %}
+          <option {% if status==s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Type</label>
+        <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for t in ['All','Single','Double','Deluxe','Suite','Presidential Suite'] %}
+          <option {% if rtype==t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <a href="{{ url_for('rooms') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="content-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover datatable mb-0">
+        <thead>
+          <tr><th>#</th><th>Room No.</th><th>Type</th><th>Floor</th><th>Capacity</th><th>Price/Night</th><th>Status</th><th>Amenities</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for r in rooms %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ r.room_number }}</strong></td>
+            <td>{{ r.room_type }}</td>
+            <td>{{ r.floor }}</td>
+            <td>{{ r.capacity }} guests</td>
+            <td class="fw-semibold text-success">{{ r.price_per_night | inr }}</td>
+            <td>{{ r.status | status_badge | safe }}</td>
+            <td><small class="text-muted">{{ r.amenities[:40] }}{% if r.amenities|length > 40 %}…{% endif %}</small></td>
+            <td>
+              {% if current_user.role == 'admin' %}
+              <a href="{{ url_for('room_edit', room_id=r.id) }}" class="btn btn-sm btn-outline-primary py-1"><i class="bi bi-pencil"></i></a>
+              <form method="POST" action="{{ url_for('room_delete', room_id=r.id) }}" class="d-inline confirm-form" data-msg="Delete Room {{ r.room_number }}?">
+                <button class="btn btn-sm btn-outline-danger py-1"><i class="bi bi-trash"></i></button>
+              </form>
+              {% else %}
+              <small class="text-muted">No Access</small>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10">
+            <div class="empty-state">
+              <div class="es-icon"><i class="bi bi-door-closed"></i></div>
+              <p>No rooms match these filters.</p>
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

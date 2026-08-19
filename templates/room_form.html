@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_sub %}Room configuration{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="content-card">
+      <div class="card-header"><i class="bi bi-door-closed-fill me-2"></i>{{ title }}</div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Room Number *</label>
+              <input type="text" name="room_number" class="form-control" value="{{ room.room_number if room else '' }}" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Room Type *</label>
+              <select name="room_type" class="form-select">
+                {% for t in ['Single','Double','Deluxe','Suite','Presidential Suite'] %}
+                <option {% if room and room.room_type==t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Price per Night (₹) *</label>
+              <input type="number" name="price_per_night" class="form-control" value="{{ room.price_per_night if room else '2500' }}" min="0" step="50" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select">
+                {% for s in ['Available','Booked','Maintenance'] %}
+                <option {% if room and room.status==s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Floor</label>
+              <input type="number" name="floor" class="form-control" value="{{ room.floor if room else '1' }}" min="1"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Capacity (guests)</label>
+              <input type="number" name="capacity" class="form-control" value="{{ room.capacity if room else '2' }}" min="1"/>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Amenities</label>
+              <input type="text" name="amenities" class="form-control" value="{{ room.amenities if room else 'WiFi, TV, AC' }}" placeholder="WiFi, TV, AC, Mini Bar..."/>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-control" rows="3">{{ room.description if room else '' }}</textarea>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-navy"><i class="bi bi-save me-1"></i>Save Room</button>
+            <a href="{{ url_for('rooms') }}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

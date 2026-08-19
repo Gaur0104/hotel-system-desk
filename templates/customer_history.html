@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}History — {{ customer.name }}{% endblock %}
+{% block page_title %}Customer History{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h4><i class="bi bi-person-vcard-fill text-navy"></i> {{ customer.name }}</h4>
+    <p class="text-muted small mb-0">
+      <i class="bi bi-telephone me-1"></i>{{ customer.phone or 'N/A' }} &nbsp;|&nbsp;
+      <i class="bi bi-envelope me-1"></i>{{ customer.email or 'N/A' }} &nbsp;|&nbsp;
+      <i class="bi bi-card-text me-1"></i>{{ customer.id_number or 'N/A' }}
+    </p>
+  </div>
+  <a href="{{ url_for('customers') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="stat-card d-flex"><div class="card-accent" style="background:var(--accent)"></div>
+      <div class="card-body"><div class="stat-label"><i class="bi bi-calendar-check me-1"></i>Total Bookings</div><div class="stat-value" style="color:var(--accent)">{{ bookings|length }}</div></div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card d-flex"><div class="card-accent" style="background:#10B981"></div>
+      <div class="card-body"><div class="stat-label"><i class="bi bi-cash-coin me-1"></i>Total Spent</div><div class="stat-value" style="color:#10B981">{{ total_spent | inr }}</div></div></div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card d-flex"><div class="card-accent" style="background:#0EA5E9"></div>
+      <div class="card-body"><div class="stat-label"><i class="bi bi-clock-history me-1"></i>Member Since</div><div class="stat-value" style="color:#0EA5E9;font-size:18px">{{ customer.created_at[:10] if customer.created_at else 'N/A' }}</div></div></div>
+  </div>
+</div>
+
+<div class="content-card">
+  <div class="card-header"><i class="bi bi-clock-history me-2"></i>Booking History</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr><th>Ref</th><th>Room</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Nights</th><th>Status</th><th>Total</th><th>Payment</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td class="text-navy fw-semibold">{{ b.booking_ref }}</td>
+            <td>{{ b.room_number }}</td><td>{{ b.room_type }}</td>
+            <td>{{ b.check_in_date }}</td><td>{{ b.check_out_date }}</td>
+            <td>{{ b.total_nights }}</td>
+            <td>{{ b.status | status_badge | safe }}</td>
+            <td class="fw-semibold">{{ b.total_amount | inr }}</td>
+            <td>{{ b.payment_status | status_badge | safe }}</td>
+            <td><a href="{{ url_for('booking_detail', bid=b.id) }}" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-eye"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10" class="text-center text-muted py-4">No bookings yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

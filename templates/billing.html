@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Billing{% endblock %}
+{% block page_title %}Billing & Invoices{% endblock %}
+{% block page_sub %}Payments, balances & invoices{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4><i class="bi bi-credit-card-2-front-fill text-navy"></i> Billing</h4>
+</div>
+
+<div class="content-card">
+  <div class="card-header"><i class="bi bi-receipt me-2"></i>Select a booking to manage billing</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover datatable mb-0">
+        <thead>
+          <tr><th>#</th><th>Ref</th><th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Total</th><th>Paid</th><th>Balance</th><th>Payment</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          {% set balance = b.total_amount - b.paid_amount %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td class="text-navy fw-semibold">{{ b.booking_ref }}</td>
+            <td>{{ b.customer_name }}</td>
+            <td>{{ b.room_number }}</td>
+            <td>{{ b.check_in_date }}</td>
+            <td>{{ b.check_out_date }}</td>
+            <td>{{ b.status | status_badge | safe }}</td>
+            <td class="fw-semibold">{{ b.total_amount | inr }}</td>
+            <td class="text-success">{{ b.paid_amount | inr }}</td>
+            <td class="{% if balance > 0 %}text-danger fw-bold{% else %}text-success{% endif %}">{{ balance | inr }}</td>
+            <td>{{ b.payment_status | status_badge | safe }}</td>
+            <td>
+              <a href="{{ url_for('billing_detail', bid=b.id) }}" class="btn btn-sm btn-navy py-1">
+                <i class="bi bi-receipt me-1"></i>Invoice
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="12">
+            <div class="empty-state">
+              <div class="es-icon"><i class="bi bi-receipt"></i></div>
+              <p>No billable bookings yet.</p>
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

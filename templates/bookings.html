@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Bookings{% endblock %}
+{% block page_title %}Bookings{% endblock %}
+{% block page_sub %}Reservations & stay lifecycle{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4><i class="bi bi-calendar-check-fill text-navy"></i> Bookings</h4>
+  <a href="{{ url_for('booking_new') }}" class="btn btn-navy"><i class="bi bi-plus-lg me-1"></i>New Booking</a>
+</div>
+
+<!-- Filters -->
+<div class="content-card mb-3">
+  <div class="card-body py-2">
+    <form class="row g-2 align-items-end" method="GET">
+      <div class="col-auto">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+          {% for s in ['All','Confirmed','Checked In','Checked Out','Cancelled'] %}
+          <option {% if status==s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">From</label>
+        <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}"/>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">To</label>
+        <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}"/>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-sm btn-info text-white"><i class="bi bi-funnel me-1"></i>Filter</button>
+      </div>
+      <div class="col-auto">
+        <a href="{{ url_for('bookings') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="content-card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover datatable mb-0">
+        <thead>
+          <tr><th>#</th><th>Ref</th><th>Guest</th><th>Phone</th><th>Room</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Nights</th><th>Status</th><th>Total</th><th>Payment Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><a href="{{ url_for('booking_detail', bid=b.id) }}" class="text-navy fw-semibold text-decoration-none">{{ b.booking_ref }}</a></td>
+            <td>{{ b.customer_name }}</td>
+            <td class="text-muted small">{{ b.phone }}</td>
+            <td><strong>{{ b.room_number }}</strong></td>
+            <td>{{ b.room_type }}</td>
+            <td>{{ b.check_in_date }}</td>
+            <td>{{ b.check_out_date }}</td>
+            <td class="text-center">{{ b.total_nights }}</td>
+            <td>{{ b.status | status_badge | safe }}</td>
+            <td class="fw-semibold">{{ b.total_amount | inr }}</td>
+            <td>{{ b.payment_status | status_badge | safe }}</td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('booking_detail', bid=b.id) }}" class="btn btn-outline-primary py-1" title="View"><i class="bi bi-eye"></i></a>
+                {% if b.status == 'Confirmed' %}
+                <form method="POST" action="{{ url_for('booking_checkin', bid=b.id) }}" class="d-inline">
+                  <button class="btn btn-outline-success py-1" title="Check In"><i class="bi bi-box-arrow-in-right"></i></button>
+                </form>
+                {% elif b.status == 'Checked In' %}
+                <form method="POST" action="{{ url_for('booking_checkout', bid=b.id) }}" class="d-inline">
+                  <button class="btn btn-outline-warning py-1" title="Check Out"><i class="bi bi-box-arrow-right"></i></button>
+                </form>
+                {% endif %}
+                {% if b.status not in ['Cancelled','Checked Out'] %}
+                <form method="POST" action="{{ url_for('booking_cancel', bid=b.id) }}" class="d-inline confirm-form" data-msg="Cancel booking {{ b.booking_ref }}?">
+                  <button class="btn btn-outline-danger py-1" title="Cancel"><i class="bi bi-x-lg"></i></button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="13">
+            <div class="empty-state">
+              <div class="es-icon"><i class="bi bi-calendar-x"></i></div>
+              <p>No bookings match these filters. <a href="{{ url_for('booking_new') }}">Create one →</a></p>
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

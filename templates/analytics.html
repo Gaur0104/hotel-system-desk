@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block page_sub %}Revenue, occupancy & performance{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<!-- KPIs -->
+<div class="row g-3">
+  {% set cards = [
+    ('Monthly Revenue', '₹' ~ (stats.monthly_revenue|int|string), 'var(--accent)', 'bi-currency-rupee'),
+    ('Occupancy Rate',  occ_rate ~ '%',                            '#10B981',       'bi-pie-chart-fill'),
+    ('Total Customers', stats.total_customers,                     '#0EA5E9',       'bi-people-fill'),
+    ('Active Bookings', stats.active_bookings,                     '#F59E0B',       'bi-calendar-check-fill'),
+  ] %}
+  {% for label, value, hex, icon in cards %}
+  <div class="col-6 col-md-3">
+    <div class="stat-card d-flex h-100">
+      <div class="card-accent" style="background-color: {{ hex }};"></div>
+      <div class="card-body">
+        <div class="stat-label"><i class="bi {{ icon }} me-1"></i>{{ label }}</div>
+        <div class="stat-value" style="color: {{ hex }};">{{ value }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Charts -->
+<div class="row g-3">
+  <div class="col-md-8">
+    <div class="content-card">
+      <div class="card-header"><i class="bi bi-graph-up-arrow me-2"></i>Revenue Trend — Last 6 Months</div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="revenueChart" height="100"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="content-card">
+      <div class="card-header"><i class="bi bi-pie-chart-fill me-2"></i>Booking Status</div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="statusChart" height="180"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="content-card">
+      <div class="card-header"><i class="bi bi-bar-chart-fill me-2"></i>Room Type Distribution</div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="roomChart" height="130"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="content-card">
+      <div class="card-header"><i class="bi bi-buildings-fill me-2"></i>Hotel Overview</div>
+      <div class="card-body">
+        <div class="row">
+          {% set overview = [
+            ('Total Rooms',     stats.total_rooms),
+            ('Available',       stats.available_rooms),
+            ('Occupied',        stats.booked_rooms),
+            ('Maintenance',     stats.maintenance_rooms),
+            ('Today Check-ins', stats.today_checkins),
+            ('Today Check-outs',stats.today_checkouts),
+            ('Today Revenue',   '₹' ~ (stats.today_revenue|int|string)),
+          ] %}
+          {% for label, val in overview %}
+          <div class="col-6 mb-2">
+            <div class="d-flex justify-content-between border-bottom pb-1">
+              <span class="text-muted small">{{ label }}</span>
+              <span class="fw-bold text-navy small">{{ val }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<div id="analyticsData" style="display: none;"
+     data-rev-labels="{{ rev_labels|escape }}"
+     data-rev-values="{{ rev_values|escape }}"
+     data-booking-statuses="{{ booking_statuses|escape }}"
+     data-room-types="{{ room_types|escape }}"></div>
+<script>
+const dataEl = document.getElementById('analyticsData');
+const revLabels = JSON.parse(dataEl.dataset.revLabels || "[]");
+const revValues = JSON.parse(dataEl.dataset.revValues || "[]");
+const bs = JSON.parse(dataEl.dataset.bookingStatuses || "[]");
+const rt = JSON.parse(dataEl.dataset.roomTypes || "[]");
+
+// Azure-aligned palette
+const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+const COLORS = {
+  accent:'#3B5BDB', accent2:'#5C7CFA', sky:'#0EA5E9',
+  success:'#10B981', warn:'#F59E0B', danger:'#EF4444',
+  slate:'#64748B', gold:'#C9A227'
+};
+const gridColor = isDark ? 'rgba(255,255,255,.06)' : 'rgba(15,23,42,.06)';
+const tickColor = isDark ? '#8A93A3' : '#667085';
+Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+Chart.defaults.color = tickColor;
+
+// Revenue Chart — gradient fill
+const rc = document.getElementById('revenueChart');
+const rctx = rc.getContext('2d');
+const grad = rctx.createLinearGradient(0, 0, 0, 260);
+grad.addColorStop(0, 'rgba(92,124,250,0.28)');
+grad.addColorStop(1, 'rgba(92,124,250,0.00)');
+new Chart(rc, {
+  type:'line',
+  data:{
+    labels: revLabels,
+    datasets:[{
+      label:'Revenue (₹)',
+      data: revValues,
+      borderColor: COLORS.accent,
+      backgroundColor: grad,
+      borderWidth: 3,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: COLORS.accent2,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      fill: true,
+      tension: 0.4,
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}, tooltip:{
+      backgroundColor:'#0B1020', padding:12, cornerRadius:10, displayColors:false,
+      callbacks:{label:c=>'₹'+c.parsed.y.toLocaleString('en-IN')}
+    }},
+    scales:{
+      y:{beginAtZero:true, grid:{color:gridColor}, border:{display:false},
+         ticks:{callback:v=>'₹'+v.toLocaleString('en-IN')}},
+      x:{grid:{display:false}, border:{display:false}}
+    }
+  }
+});
+
+// Booking Status doughnut
+const statusColors = {Confirmed:COLORS.accent,'Checked In':COLORS.success,'Checked Out':COLORS.slate,Cancelled:COLORS.danger};
+if(bs.length){
+  new Chart(document.getElementById('statusChart'),{
+    type:'doughnut',
+    data:{
+      labels:bs.map(b=>b[0]),
+      datasets:[{data:bs.map(b=>b[1]),backgroundColor:bs.map(b=>statusColors[b[0]]||COLORS.gold),borderWidth:0,hoverOffset:6}]
+    },
+    options:{responsive:true,cutout:'62%',plugins:{legend:{position:'bottom',labels:{padding:14,usePointStyle:true,font:{size:12}}}}}
+  });
+} else {
+  document.getElementById('statusChart').parentElement.innerHTML='<p class="text-muted text-center py-4">No booking data yet</p>';
+}
+
+// Room Type horizontal bars
+const rtColors = [COLORS.accent,COLORS.accent2,COLORS.sky,COLORS.success,COLORS.warn,COLORS.gold];
+if(rt.length){
+  new Chart(document.getElementById('roomChart'),{
+    type:'bar',
+    data:{
+      labels:rt.map(r=>r[0]),
+      datasets:[{data:rt.map(r=>r[1]),backgroundColor:rtColors.slice(0,rt.length),borderRadius:8,barThickness:22}]
+    },
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:gridColor},border:{display:false}},
+              y:{grid:{display:false},border:{display:false}}}}
+  });
+}
+</script>
+{% endblock %}
